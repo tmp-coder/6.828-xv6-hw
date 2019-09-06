@@ -9,7 +9,7 @@
 .globl swtch
 swtch:
   movl 4(%esp), %eax
-  movl 8(%esp), %edx
+  movl 8(%esp), %edx # p->context
 
   # Save old callee-saved registers
   pushl %ebp
