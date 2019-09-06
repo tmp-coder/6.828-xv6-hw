@@ -10,7 +10,7 @@
 .code16                       # Assemble for 16-bit mode
 .globl start
 start:
-  cli                         # BIOS enabled interrupts; disable
+  cli                         # BIOS enabled interrupts; **disable**
 
   # Zero data segment registers DS, ES, and SS.
   xorw    %ax,%ax             # Set %ax to zero
@@ -18,6 +18,7 @@ start:
   movw    %ax,%es             # -> Extra Segment
   movw    %ax,%ss             # -> Stack Segment
 
+  # enable A20(for PC-compatible 8086legacy)
   # Physical address line A20 is tied to zero so that the first PCs 
   # with 2 MB would run software that assumed 1 MB.  Undo that.
 seta20.1:
@@ -41,8 +42,8 @@ seta20.2:
   # effective memory map doesn't change during the transition.
   lgdt    gdtdesc
   movl    %cr0, %eax
-  orl     $CR0_PE, %eax
-  movl    %eax, %cr0
+  orl     $CR0_PE, %eax # set protected mode bit to 1, enable protected mode
+  movl    %eax, %cr0 
 
 //PAGEBREAK!
   # Complete the transition to 32-bit protected mode by using a long jmp

@@ -24,7 +24,7 @@ bootmain(void)
 
   elf = (struct elfhdr*)0x10000;  // scratch space
 
-  // Read 1st page off disk
+  // Read 1st page off disk, (4K)
   readseg((uchar*)elf, 4096, 0);
 
   // Is this an ELF executable?
@@ -40,7 +40,7 @@ bootmain(void)
     if(ph->memsz > ph->filesz)
       stosb(pa + ph->filesz, 0, ph->memsz - ph->filesz);
   }
-
+  // readseg((uchar *)0x100000,0xa500,0x1000);
   // Call the entry point from the ELF header.
   // Does not return!
   entry = (void(*)(void))(elf->entry);
