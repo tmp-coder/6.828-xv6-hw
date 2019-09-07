@@ -77,7 +77,24 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-
+  case T_PGFLT: // page fault
+    // uint va = tf->eip;
+  {
+    uint pg_bound = PGROUNDDOWN(rcr2());
+    struct proc * curproc = myproc();
+    if(pg_bound>=curproc->sz)
+    {
+      panic("page fault");
+      return;
+    }
+    if(!allocuvm(curproc->pgdir,pg_bound,curproc->sz))
+    {
+      panic("trap page fault");
+      return;
+    }
+    switchuvm(curproc);
+    break;
+  }
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
