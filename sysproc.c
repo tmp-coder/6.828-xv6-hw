@@ -54,8 +54,10 @@ sys_sbrk(void)
   
   addr = curproc->sz;
   curproc->sz +=n;
-  // if(growproc(n) < 0) // lazy page allocation
-  //   return -1;
+#if 0
+  if(growproc(n) < 0) // lazy page allocation
+    return -1;
+#endif
   return addr;
 }
 

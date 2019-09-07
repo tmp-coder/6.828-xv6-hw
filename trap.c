@@ -13,6 +13,7 @@ struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
+extern int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
 
 void
 tvinit(void)
@@ -46,6 +47,30 @@ trap(struct trapframe *tf)
     return;
   }
 
+  if(tf->trapno == T_PGFLT){
+    uint va = PGROUNDDOWN(rcr2());
+    struct proc * curproc = myproc();
+    if(va < curproc->sz){
+      char* mem = kalloc();
+      pde_t* pgdir = curproc->pgdir;
+      if(mem == 0){
+        cprintf("allocuvm out of memory\n");
+        exit();
+        return;
+      }
+      memset(mem, 0, PGSIZE);// set 0 for this page
+      if(mappages(pgdir, (char*)va, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
+        cprintf("allocuvm out of memory (2)\n");
+        // deallocuvm(pgdir, newsz, oldsz);
+        kfree(mem);
+        return;
+      }
+      return;
+    }else{
+      panic("page fault");
+      exit();
+    }
+  }
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
@@ -77,24 +102,7 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-  case T_PGFLT: // page fault
-    // uint va = tf->eip;
-  {
-    uint pg_bound = PGROUNDDOWN(rcr2());
-    struct proc * curproc = myproc();
-    if(pg_bound>=curproc->sz)
-    {
-      panic("page fault");
-      return;
-    }
-    if(!allocuvm(curproc->pgdir,pg_bound,curproc->sz))
-    {
-      panic("trap page fault");
-      return;
-    }
-    switchuvm(curproc);
-    break;
-  }
+  
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
