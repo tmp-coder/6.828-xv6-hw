@@ -452,3 +452,18 @@ int sys_date(void){
   cmostime(r);
   return 0;
 }
+
+int
+sys_alarm(void)
+{
+  int ticks;
+  void (*handler)();
+  struct proc* curproc = myproc();
+  if(argint(0, &ticks) < 0)
+    return -1;
+  if(argptr(1, (char**)&handler, 1) < 0)
+    return -1;
+  curproc->alarmticks = ticks;
+  curproc->alarmhandler = handler;
+  return 0;
+}

@@ -80,6 +80,16 @@ trap(struct trapframe *tf)
       release(&tickslock);
     }
     lapiceoi();
+    struct proc * curproc = myproc();
+    if(curproc!=0 && (tf->cs & DPL_USER)==DPL_USER){
+      if(curproc->alarmticks>0 && ticks % curproc->alarmticks==0)
+      {
+        tf->esp -= 4;
+        *((uint *)tf->esp) = tf->eip;// push eip
+        tf->eip =(uint)curproc->alarmhandler;
+        // curproc -> tf = tf; useless
+      }
+    }
     break;
   case T_IRQ0 + IRQ_IDE:
     ideintr();

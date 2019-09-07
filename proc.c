@@ -108,6 +108,7 @@ found:
   *(uint*)sp = (uint)trapret;
 
   sp -= sizeof *p->context;
+  p->alarmticks =0;// no alarms
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
